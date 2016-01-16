@@ -50,7 +50,7 @@
   },
   "browser": {
     "angular": "./bower_components/angular/angular.js",
-    "angular-cookies": "./bower_components/angular-cookies/angular-cookies.js",
+    "angular-simple-local-storage": "./bower_components/angular-simple-local-storage/dist/ng-storage.min.js",
     "query-string": "./bower_components/query-string/query-string.js"
   },
   "scripts": {

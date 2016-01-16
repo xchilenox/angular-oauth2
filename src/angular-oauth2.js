@@ -8,12 +8,14 @@ import OAuthProvider from './providers/oauth-provider';
 import OAuthTokenProvider from './providers/oauth-token-provider';
 import oauthConfig from './config/oauth-config';
 import oauthInterceptor from './interceptors/oauth-interceptor';
-import 'angular-cookies';
+import httpBuffer from './services/http-buffer';
+import 'angular-simple-local-storage';
 
 var ngModule = angular.module('angular-oauth2', [
-    'ngCookies'
+    'ngStorage'
   ])
   .config(oauthConfig)
+  .factory('httpBuffer', httpBuffer)
   .factory('oauthInterceptor', oauthInterceptor)
   .provider('OAuth', OAuthProvider)
   .provider('OAuthToken', OAuthTokenProvider)

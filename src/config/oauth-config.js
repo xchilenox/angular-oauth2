@@ -6,7 +6,7 @@
  */
 
 function oauthConfig($httpProvider) {
-  $httpProvider.interceptors.push('oauthInterceptor');
+	$httpProvider.interceptors.push('oauthInterceptor');
 }
 
 /**

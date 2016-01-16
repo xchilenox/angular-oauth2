@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "angular": "^1.4.0",
-    "angular-cookies": "^1.4.0",
+    "angular-simple-local-storage": "^0.1.0",
     "query-string": "^1.0.0"
   }
 }
