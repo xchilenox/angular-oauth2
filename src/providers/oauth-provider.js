@@ -79,7 +79,7 @@ function OAuthProvider() {
    * @ngInject
    */
 
-    this.$get = function($rootScope, $http, OAuthToken, httpBuffer) {
+    this.$get = function($rootScope, $http, OAuthToken, httpBuffer, authManager) {
         class OAuth {
 
             /**
@@ -210,6 +210,27 @@ function OAuthProvider() {
             }
 
             /**
+             * Refresh the token with `refresh_token` and stores the `response.data` on localStorage
+             * using the `OAuthToken`.
+             *
+             * @return {promise} A response promise.
+             */
+
+            refreshToken() {
+                if(!$rootScope.isRefreshingToken) {
+                    $rootScope.isRefreshingToken = true;
+                    return this.getRefreshToken().then(
+                        function() {
+                            authManager.loginConfirmed();
+                        },
+                        function() {
+                            authManager.loginCancelled();
+                        }
+                    );
+                }
+            }
+
+            /**
              * Revokes the `token` and removes the stored `token` from localStorage
              * using the `OAuthToken`.
              *
@@ -229,25 +250,6 @@ function OAuthProvider() {
                     OAuthToken.removeToken();
                     return response;
                 });
-            }
-
-            /**
-             * Confirm the login
-             */
-
-            loginConfirmed(data, configUpdater) {
-                var updater = configUpdater || function(config) { return config; };
-                $rootScope.$broadcast('oauth:login-confirmed', data);
-                httpBuffer.retryAll(updater);
-            }
-
-            /**
-             * Cancel the login
-             */
-
-            loginCancelled(data, reason) {
-                httpBuffer.rejectAll(reason);
-                $rootScope.$broadcast('oauth:login-cancelled', data);
             }
         }
         return new OAuth();

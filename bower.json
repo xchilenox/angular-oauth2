@@ -1,10 +1,14 @@
 {
   "name": "angular-oauth2",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "AngularJS OAuth2",
-  "main": "./dist/angular-oauth2.js",
+  "main": [
+    "./dist/angular-oauth2.js",
+    "./dist/angular-oauth2.min.js"
+  ],
   "authors": [
-    "Seegno <projects@seegno.com>"
+    "Seegno <projects@seegno.com>",
+    "Rodrigo Albornoz <rodrigo.albornoz.f@gmail.com>"
   ],
   "keywords": [
     "AngularJS",
@@ -12,7 +16,7 @@
     "OAuth2"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/seegno/angular-oauth2",
+  "homepage": "https://github.com/xchilenox/angular-oauth2",
   "ignore": [
     "**/.*",
     "bower_components",

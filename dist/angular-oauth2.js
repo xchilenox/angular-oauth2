@@ -1,7 +1,7 @@
 /**
  * angular-oauth2 - Angular OAuth2
- * @version v3.0.1
- * @link https://github.com/seegno/angular-oauth2
+ * @version v3.0.2
+ * @link https://github.com/xchilenox/angular-oauth2
  * @license MIT
  */
 (function(root, factory) {
@@ -13,7 +13,7 @@
         root.angularOAuth2 = factory(root.angular, root.queryString);
     }
 })(this, function(angular, queryString) {
-    var ngModule = angular.module("angular-oauth2", [ "ngStorage" ]).config(oauthConfig).factory("httpBuffer", httpBuffer).factory("oauthInterceptor", oauthInterceptor).provider("OAuth", OAuthProvider).provider("OAuthToken", OAuthTokenProvider);
+    var ngModule = angular.module("angular-oauth2", [ "ngStorage" ]).config(oauthConfig).factory("httpBuffer", httpBuffer).factory("authManager", authManager).factory("oauthInterceptor", oauthInterceptor).provider("OAuth", OAuthProvider).provider("OAuthToken", OAuthTokenProvider);
     function oauthConfig($httpProvider) {
         $httpProvider.interceptors.push("oauthInterceptor");
     }
@@ -97,7 +97,7 @@
             }
             return config;
         };
-        this.$get = function($rootScope, $http, OAuthToken, httpBuffer) {
+        this.$get = function($rootScope, $http, OAuthToken, httpBuffer, authManager) {
             var OAuth = function() {
                 function OAuth() {
                     if (!config) {
@@ -196,6 +196,21 @@
                         enumerable: true,
                         configurable: true
                     },
+                    refreshToken: {
+                        value: function refreshToken() {
+                            if (!$rootScope.isRefreshingToken) {
+                                $rootScope.isRefreshingToken = true;
+                                return this.getRefreshToken().then(function() {
+                                    authManager.loginConfirmed();
+                                }, function() {
+                                    authManager.loginCancelled();
+                                });
+                            }
+                        },
+                        writable: true,
+                        enumerable: true,
+                        configurable: true
+                    },
                     revokeToken: {
                         value: function revokeToken() {
                             var data = queryString.stringify({
@@ -214,34 +229,13 @@
                         writable: true,
                         enumerable: true,
                         configurable: true
-                    },
-                    loginConfirmed: {
-                        value: function loginConfirmed(data, configUpdater) {
-                            var updater = configUpdater || function(config) {
-                                return config;
-                            };
-                            $rootScope.$broadcast("oauth:login-confirmed", data);
-                            httpBuffer.retryAll(updater);
-                        },
-                        writable: true,
-                        enumerable: true,
-                        configurable: true
-                    },
-                    loginCancelled: {
-                        value: function loginCancelled(data, reason) {
-                            httpBuffer.rejectAll(reason);
-                            $rootScope.$broadcast("oauth:login-cancelled", data);
-                        },
-                        writable: true,
-                        enumerable: true,
-                        configurable: true
                     }
                 });
                 return OAuth;
             }();
             return new OAuth();
         };
-        this.$get.$inject = [ "$rootScope", "$http", "OAuthToken", "httpBuffer" ];
+        this.$get.$inject = [ "$rootScope", "$http", "OAuthToken", "httpBuffer", "authManager" ];
     }
     var _prototypeProperties = function(child, staticProps, instanceProps) {
         if (staticProps) Object.defineProperties(child, staticProps);
@@ -328,6 +322,33 @@
         };
         this.$get.$inject = [ "$localStorage" ];
     }
+    function authManager($rootScope, httpBuffer) {
+        var loginConfirmed = function(data, configUpdater) {
+            var updater = configUpdater || function(config) {
+                return config;
+            };
+            httpBuffer.retryAll(updater);
+            $rootScope.$broadcast("oauth:login-confirmed", data);
+        };
+        var loginCancelled = function(data, reason) {
+            httpBuffer.rejectAll(reason);
+            $rootScope.$broadcast("oauth:login-cancelled", data);
+        };
+        var factory = {
+            loginConfirmed: loginConfirmed,
+            loginCancelled: loginCancelled
+        };
+        $rootScope.$on("oauth:login-confirmed", function(event) {
+            event.preventDefault();
+            $rootScope.isRefreshingToken = false;
+        });
+        $rootScope.$on("oauth:login-cancelled", function(event) {
+            event.preventDefault();
+            $rootScope.isRefreshingToken = false;
+        });
+        return factory;
+    }
+    authManager.$inject = [ "$rootScope", "httpBuffer" ];
     function httpBuffer($injector) {
         var retryHttpRequest = function(config, deferred) {
             var successCallback = function(response) {
