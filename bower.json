@@ -28,7 +28,7 @@
   ],
   "dependencies": {
     "angular": "^1.4.0",
-    "angular-simple-local-storage": "^0.1.0",
+    "angular-simple-local-storage": "^0.0.1",
     "query-string": "^1.0.0"
   }
 }
