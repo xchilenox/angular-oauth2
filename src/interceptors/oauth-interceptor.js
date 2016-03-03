@@ -22,6 +22,8 @@ function oauthInterceptor($q, $rootScope, OAuthToken, httpBuffer) {
     }
 
     function responseError(rejection) {
+        var output = $q.reject(rejection);
+
         // Convert to JSON if is not an object
         if(!angular.isObject(rejection.data)) {
             rejection.data = JSON.parse(rejection.data);
@@ -39,22 +41,16 @@ function oauthInterceptor($q, $rootScope, OAuthToken, httpBuffer) {
             $rootScope.$emit('oauth:error', rejection);
         }
 
-        if(401 === rejection.status && rejection.statusText === 'Unauthorized') {
-            if(!rejection.data) {
-                rejection.data = {
-                    error: 'access_denied'
-                };
-            }
-
-            if(rejection.data && rejection.data.error === 'access_denied') {
-                var deferred = $q.defer();
-                httpBuffer.append(rejection.config, deferred);
-                $rootScope.$emit('oauth:login-required', rejection);
-                return deferred.promise;
-            }
+        // Catch `access_denied` and `unauthorized` errors.
+        // The token isn't removed here and will be refreshed when the `access_denied` error occurs.
+        if(401 === rejection.status && (rejection.data && 'access_denied' === rejection.data.error) || (rejection.headers('www-authenticate') && 0 === rejection.headers('www-authenticate').indexOf('Bearer'))) {
+            var deferred = $q.defer();
+            httpBuffer.append(rejection.config, deferred);
+            $rootScope.$emit('oauth:login-required', rejection);
+            output = deferred.promise;
         }
 
-        return $q.reject(rejection);
+        return output;
     }
 
     return factory;
