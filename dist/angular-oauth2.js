@@ -1,6 +1,6 @@
 /**
  * angular-oauth2 - Angular OAuth2
- * @version v3.0.2
+ * @version v3.0.4
  * @link https://github.com/xchilenox/angular-oauth2
  * @license MIT
  */
@@ -41,7 +41,7 @@
             if (401 === rejection.status && (rejection.data && "access_denied" === rejection.data.error) || rejection.headers("www-authenticate") && 0 === rejection.headers("www-authenticate").indexOf("Bearer")) {
                 var deferred = $q.defer();
                 httpBuffer.append(rejection.config, deferred);
-                $rootScope.$emit("oauth:login-required", rejection);
+                $rootScope.$emit("oauth:error", rejection);
                 output = deferred.promise;
             }
             return output;
@@ -190,8 +190,8 @@
                         enumerable: true,
                         configurable: true
                     },
-                    refreshToken: {
-                        value: function refreshToken() {
+                    getRefreshTokenAndRetryRequests: {
+                        value: function getRefreshTokenAndRetryRequests() {
                             if (!$rootScope.isRefreshingToken) {
                                 $rootScope.isRefreshingToken = true;
                                 return this.getRefreshToken().then(function() {

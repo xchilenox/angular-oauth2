@@ -46,7 +46,7 @@ function oauthInterceptor($q, $rootScope, OAuthToken, httpBuffer) {
         if(401 === rejection.status && (rejection.data && 'access_denied' === rejection.data.error) || (rejection.headers('www-authenticate') && 0 === rejection.headers('www-authenticate').indexOf('Bearer'))) {
             var deferred = $q.defer();
             httpBuffer.append(rejection.config, deferred);
-            $rootScope.$emit('oauth:login-required', rejection);
+            $rootScope.$emit('oauth:error', rejection);
             output = deferred.promise;
         }
 

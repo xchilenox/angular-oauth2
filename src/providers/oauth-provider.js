@@ -216,7 +216,7 @@ function OAuthProvider() {
              * @return {promise} A response promise.
              */
 
-            refreshToken() {
+            getRefreshTokenAndRetryRequests() {
                 if(!$rootScope.isRefreshingToken) {
                     $rootScope.isRefreshingToken = true;
                     return this.getRefreshToken().then(
