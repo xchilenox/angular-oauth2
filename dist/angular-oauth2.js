@@ -343,13 +343,15 @@
         return factory;
     }
     authManager.$inject = [ "$rootScope", "httpBuffer" ];
-    function httpBuffer($injector) {
-        var retryHttpRequest = function(config, deferred) {
+    function httpBuffer($rootScope, $injector) {
+        var retryHttpRequest = function(config, deferred, index) {
             var successCallback = function(response) {
                 deferred.resolve(response);
+                removeFromBuffer(index);
             };
             var errorCallback = function(response) {
                 deferred.reject(response);
+                removeFromBuffer(index);
             };
             $http = $http || $injector.get("$http");
             $http(config).then(successCallback, errorCallback);
@@ -370,9 +372,14 @@
         };
         var retryAll = function(updater) {
             for (var i = 0; i < buffer.length; ++i) {
-                retryHttpRequest(updater(buffer[i].config), buffer[i].deferred);
+                retryHttpRequest(updater(buffer[i].config), buffer[i].deferred, i);
             }
-            buffer = [];
+        };
+        var removeFromBuffer = function(index) {
+            buffer.splice(index, 1);
+            if (buffer.length === 0) {
+                $rootScope.$broadcast("oauth:retry-completed");
+            }
         };
         var factory = {
             append: append,
@@ -383,6 +390,6 @@
         var $http;
         return factory;
     }
-    httpBuffer.$inject = [ "$injector" ];
+    httpBuffer.$inject = [ "$rootScope", "$injector" ];
     return ngModule;
 });

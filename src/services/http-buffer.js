@@ -5,7 +5,7 @@
  * @ngInject
  */
 
-function httpBuffer($injector) {
+function httpBuffer($rootScope, $injector) {
     var factory = {
         append: append,
         rejectAll: rejectAll,
@@ -18,13 +18,15 @@ function httpBuffer($injector) {
     // Service initialized later because of circular dependency problem.
     var $http;
 
-    function retryHttpRequest(config, deferred) {
+    function retryHttpRequest(config, deferred, index) {
         function successCallback(response) {
             deferred.resolve(response);
+            removeFromBuffer(index);
         }
 
         function errorCallback(response) {
             deferred.reject(response);
+            removeFromBuffer(index);
         }
 
         $http = $http || $injector.get('$http');
@@ -52,9 +54,16 @@ function httpBuffer($injector) {
     // Retries all the buffered requests clears the buffer.
     function retryAll(updater) {
         for(var i = 0; i < buffer.length; ++i) {
-            retryHttpRequest(updater(buffer[i].config), buffer[i].deferred);
+            retryHttpRequest(updater(buffer[i].config), buffer[i].deferred, i);
         }
-        buffer = [];
+    }
+
+    // Remove an element from array by index
+    function removeFromBuffer(index) {
+        buffer.splice(index, 1);
+        if(buffer.length === 0) {
+            $rootScope.$broadcast('oauth:retry-completed');
+        }
     }
 
     return factory;
